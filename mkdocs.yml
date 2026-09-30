@@ -1,0 +1,15 @@
+site_name: ExpenseBot
+site_description: Telegram-бот для учёта личных расходов
+theme:
+  name: material
+  language: ru
+nav:
+  - Главная: index.md
+  - Требования:
+      - PRD: prd.md
+      - Глоссарий: glossary.md
+  - Архитектура (ADR):
+      - "ADR-001: Язык и фреймворк": adr/001-language-and-framework.md
+      - "ADR-002: База данных": adr/002-database.md
+      - "ADR-003: Архитектурный стиль": adr/003-architecture-style.md
+  - Руководство по стилю: style-guide.md

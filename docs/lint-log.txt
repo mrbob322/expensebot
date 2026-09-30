@@ -1,0 +1,12 @@
+$ isort --check src
+OK
+$ black --check src
+All done! ✨ 🍰 ✨
+7 files would be left unchanged.
+$ flake8 src
+OK
+$ mypy
+Success: no issues found in 7 source files
+$ pytest
+...                                                                      [100%]
+3 passed in 2.51s
