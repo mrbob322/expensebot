@@ -1,0 +1,69 @@
+"""Дата в формате ISO 8601 (YYYY-MM-DD)."""
+scalar Date
+
+"""Расход пользователя."""
+type Expense {
+  "Уникальный идентификатор"
+  id: ID!
+  "Сумма в рублях, > 0"
+  amount: Float!
+  "Категория расхода"
+  category: Category!
+  "Комментарий (до 200 символов)"
+  comment: String
+  "Дата расхода"
+  date: Date!
+}
+
+"""Категория расходов."""
+type Category {
+  id: ID!
+  "Название (до 50 символов)"
+  name: String!
+}
+
+"""Итог по одной категории."""
+type CategoryTotal {
+  category: Category!
+  total: Float!
+}
+
+"""Сводка за период."""
+type Summary {
+  total: Float!
+  byCategory: [CategoryTotal!]!
+}
+
+input ExpenseInput {
+  amount: Float!
+  categoryId: ID!
+  comment: String
+  date: Date
+}
+
+type Query {
+  "Список расходов с фильтрами"
+  expenses(limit: Int = 20, categoryId: ID, from: Date, to: Date): [Expense!]!
+  "Расход по ID"
+  expense(id: ID!): Expense
+  "Все категории пользователя"
+  categories: [Category!]!
+  "Сводка расходов за период"
+  summary(from: Date!, to: Date!): Summary!
+}
+
+type Mutation {
+  "Добавить расход"
+  addExpense(input: ExpenseInput!): Expense!
+  "Изменить расход"
+  updateExpense(id: ID!, input: ExpenseInput!): Expense!
+  "Удалить расход; true, если удалён"
+  deleteExpense(id: ID!): Boolean!
+  "Создать категорию"
+  addCategory(name: String!): Category!
+}
+
+type Subscription {
+  "Новый расход пользователя в реальном времени"
+  expenseAdded: Expense!
+}

@@ -1,44 +1,6 @@
-# Виртуальные окружения
-.venv/
-venv/
-env/
-
-# Кэш
 __pycache__/
-*.py[cod]
-.mypy_cache/
-.pytest_cache/
-.ruff_cache/
-.pre-commit-cache/
-
-# Артефакты сборки
-build/
-dist/
-*.egg-info/
-site/
-.coverage
-coverage.xml
-htmlcov/
-
-# IDE
-.idea/
-.vscode/
-*.swp
-.DS_Store
-
-# Локальные конфиги и секреты
-.env
-.env.*
-!.env.example
-*.pem
-*.key
-secrets/
-
-# Логи
-*.log
-logs/
-
-# Тестовые данные и локальные базы
 *.db
-*.sqlite3
-tests/data/
+.venv/
+
+.env
+*.egg-info/

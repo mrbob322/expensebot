@@ -1,0 +1,257 @@
+openapi: 3.0.3
+info:
+  title: ExpenseBot API
+  version: 1.0.0
+  description: REST API для Telegram-бота учёта расходов.
+servers:
+  - url: https://api.expensebot.local/v1
+tags:
+  - name: Expenses
+    description: Расходы пользователя
+  - name: Categories
+    description: Категории расходов
+  - name: Reports
+    description: Отчёты и статистика
+paths:
+  /expenses:
+    get:
+      summary: Список расходов
+      tags: [Expenses]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: limit
+          in: query
+          schema: { type: integer, minimum: 1, maximum: 100, default: 20 }
+        - name: category
+          in: query
+          schema: { type: string, maxLength: 50 }
+        - name: from
+          in: query
+          schema: { type: string, format: date }
+        - name: to
+          in: query
+          schema: { type: string, format: date }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/Expense' }
+              example:
+                - { id: 42, amount: 350.50, category: "Еда", comment: "Обед", date: "2026-10-25" }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '500': { $ref: '#/components/responses/ServerError' }
+    post:
+      summary: Добавить расход
+      tags: [Expenses]
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ExpenseInput' }
+            example: { amount: 350.50, category: "Еда", comment: "Обед", date: "2026-10-25" }
+      responses:
+        '201':
+          description: Создано
+          headers:
+            Location: { schema: { type: string }, example: /v1/expenses/42 }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Expense' }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '500': { $ref: '#/components/responses/ServerError' }
+  /expenses/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema: { type: integer, minimum: 1 }
+    get:
+      summary: Расход по ID
+      tags: [Expenses]
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Expense' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    patch:
+      summary: Изменить расход
+      tags: [Expenses]
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ExpenseInput' }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Expense' }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    delete:
+      summary: Удалить расход
+      tags: [Expenses]
+      security: [{ bearerAuth: [] }]
+      responses:
+        '204': { description: Удалено }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+  /categories:
+    get:
+      summary: Список категорий
+      tags: [Categories]
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/Category' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+    post:
+      summary: Создать категорию
+      tags: [Categories]
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name]
+              properties:
+                name: { type: string, minLength: 1, maxLength: 50, example: "Транспорт" }
+      responses:
+        '201':
+          description: Создано
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Category' }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+  /reports/summary:
+    get:
+      summary: Сводка расходов за период
+      tags: [Reports]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: from
+          in: query
+          required: true
+          schema: { type: string, format: date }
+        - name: to
+          in: query
+          required: true
+          schema: { type: string, format: date }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Summary' }
+              example:
+                total: 12480.00
+                by_category: [{ category: "Еда", total: 6200.00 }, { category: "Транспорт", total: 6280.00 }]
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '500': { $ref: '#/components/responses/ServerError' }
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    Expense:
+      type: object
+      required: [id, amount, category, date]
+      properties:
+        id: { type: integer, example: 42 }
+        amount: { type: number, format: double, minimum: 0.01, example: 350.50 }
+        category: { type: string, maxLength: 50, example: "Еда" }
+        comment: { type: string, maxLength: 200, example: "Обед" }
+        date: { type: string, format: date, example: "2026-10-25" }
+    ExpenseInput:
+      type: object
+      required: [amount, category]
+      properties:
+        amount: { type: number, minimum: 0.01, example: 350.50 }
+        category: { type: string, maxLength: 50 }
+        comment: { type: string, maxLength: 200 }
+        date: { type: string, format: date }
+    Category:
+      type: object
+      required: [id, name]
+      properties:
+        id: { type: integer, example: 1 }
+        name: { type: string, example: "Еда" }
+    Summary:
+      type: object
+      properties:
+        total: { type: number }
+        by_category:
+          type: array
+          items:
+            type: object
+            properties:
+              category: { type: string }
+              total: { type: number }
+    Error:
+      type: object
+      required: [code, message]
+      properties:
+        code: { type: string, example: VALIDATION_ERROR }
+        message: { type: string, example: "Поле 'amount' обязательно" }
+        fields:
+          type: array
+          items:
+            type: object
+            properties:
+              name: { type: string }
+              reason: { type: string }
+  responses:
+    ValidationError:
+      description: Ошибка валидации (400)
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+    Unauthorized:
+      description: Не аутентифицирован (401)
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+          example: { code: UNAUTHORIZED, message: "Неверный или отсутствующий токен" }
+    Forbidden:
+      description: Нет прав (403)
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+    NotFound:
+      description: Не найдено (404)
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+          example: { code: NOT_FOUND, message: "Расход не найден" }
+    ServerError:
+      description: Ошибка сервера (500)
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+          example: { code: INTERNAL_ERROR, message: "Внутренняя ошибка сервера" }
